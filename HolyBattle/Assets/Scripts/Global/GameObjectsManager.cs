@@ -1,6 +1,5 @@
-using OpenCover.Framework.Model;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public sealed class GameObjectsManager : MonoBehaviour
@@ -10,6 +9,7 @@ public sealed class GameObjectsManager : MonoBehaviour
     public static GameObjectsManager m_instance;
 
     private List<GameObject> _allObjects = new List<GameObject>();
+    private List<GameObject> _playerGrid = new List<GameObject>();
 
     private void Awake()
     {
@@ -20,7 +20,6 @@ public sealed class GameObjectsManager : MonoBehaviour
             _instance = this;
             DontDestroyOnLoad(gameObject);
         }
-
     }
 
     public static void Register(GameObject gameObject)
@@ -72,4 +71,73 @@ public sealed class GameObjectsManager : MonoBehaviour
         return items.ToArray();
     }
 
+    #region WorkWithGrid
+    //методы касающиеся сетки спавна игрока
+
+    public static void RegisterGrid(GameObject gameObject)
+    {
+        if (!_instance._playerGrid.Contains(gameObject))
+            _instance._playerGrid.Add(gameObject);
+    }
+
+    public static void UnregisterGrid(GameObject gameObject)
+    {
+        if (_instance._playerGrid.Contains(gameObject))
+            _instance._playerGrid.Remove(gameObject);
+    }
+
+    public static int TakeGridCount()
+    {
+        List<GameObject> items = new List<GameObject>();
+        foreach (var entry in _instance._playerGrid)
+        {
+            items.Add(entry);
+        }
+
+        Array _items = items.ToArray();
+        
+        return _items.Length;
+    }
+
+    public static GameObject[] GetNPCGridByName(string _gridTeam, string _gridPos)
+    {
+        List<GameObject> _itemsLine = new List<GameObject>();
+        List<GameObject> _itemsNotLine = new List<GameObject>();
+
+        foreach (var entry in _instance._playerGrid)
+        {
+            PlayerGrid _entryGridFunction = entry.gameObject.GetComponent<PlayerGrid>();
+
+            if (_entryGridFunction._teamNum != _gridTeam && _entryGridFunction._xPos == _gridPos)
+            {
+                List<GameObject> _npcGameObject = _entryGridFunction._NPCGrid;
+
+                foreach (var npc in _npcGameObject)
+                {
+                    _itemsLine.Add(npc);
+                }
+            }
+
+            else if (_entryGridFunction._teamNum != _gridTeam && _entryGridFunction._xPos != _gridPos)
+            {
+                List<GameObject> _npcGameObject = _entryGridFunction._NPCGrid;
+
+                foreach (var npc in _npcGameObject)
+                {
+                    _itemsNotLine.Add(npc);
+                }
+            }
+        }
+
+        if (_itemsLine.Count > 0)
+        {
+            return _itemsLine.ToArray();
+        }
+        else
+        {
+            return _itemsNotLine.ToArray();
+        }
+    }
+
+    #endregion
 }
