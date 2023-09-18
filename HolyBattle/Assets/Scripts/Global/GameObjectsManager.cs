@@ -18,10 +18,9 @@ public sealed class GameObjectsManager : MonoBehaviour
         else
         {
             _instance = this;
-            DontDestroyOnLoad(gameObject);
         }
     }
-
+    
     public static void Register(GameObject gameObject)
     {
         if (!_instance._allObjects.Contains(gameObject))

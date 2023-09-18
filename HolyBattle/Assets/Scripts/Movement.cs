@@ -6,8 +6,10 @@ public class Movement : NetworkBehaviour
 {
     private NavMeshAgent _agent;
     private bool _isGameStarted = false;
+    private Animator _animator;
 
     [SerializeField] private Transform _agroTransform;
+    [SerializeField] private GameObject _stopPrefab;
     
     public string _gridPos, _gridTeam;
     public GameObject _gridParent;
@@ -15,6 +17,7 @@ public class Movement : NetworkBehaviour
     void Start()
     {
         _agent = GetComponent<NavMeshAgent>();
+        _animator = GetComponent<Animator>();
 
         GameEventManager.StartMovementAction += ChangeStartBool;
         
@@ -31,10 +34,12 @@ public class Movement : NetworkBehaviour
         if (_agroTransform)
         {
             _agent.SetDestination(_agroTransform.position);
+            _animator.SetFloat("Movement", _agent.remainingDistance);
             transform.LookAt(new Vector3(_agroTransform.position.x, 0f, _agroTransform.position.z));
         }
         else
         {
+            _animator.SetFloat("Movement", 0);
             FindClosestEnemy();
         }
     }
@@ -60,19 +65,26 @@ public class Movement : NetworkBehaviour
 
     private void CheckGridCount() //метод на проверку колличества сеток (игроков) и инвок объ€вл€ющий начало передвижеи€ юнитов
     {
-        if (GameObjectsManager.TakeGridCount() > 3) //тройку (3) нужно помен€ть на переменную, котора€ говорит на сколько игроков рассчитан этот бой
+        if (GameObjectsManager.TakeGridCount() > 1) //тройку (3) нужно помен€ть на переменную, котора€ говорит на сколько игроков рассчитан этот бой
         {
-            GameEventManager.StartMovementAction?.Invoke();
+            Invoke("StartEventInitialize", 5f);
         }
+    }
+
+    private void StartEventInitialize()
+    {
+        GameEventManager.StartMovementAction?.Invoke();
     }
 
     private void ChangeStartBool() //булево при true разрешает Ќѕ— ходить
     {
         _isGameStarted = true;
+        GameEventManager.StartMovementAction -= ChangeStartBool;
     }
 
     private void OnDestroy()
     {
+        GameEventManager.StartMovementAction -= ChangeStartBool;
         GameEventManager.GridDestroy?.Invoke(_gridParent, gameObject);
     }
 
